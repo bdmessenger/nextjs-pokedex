@@ -1,65 +1,70 @@
-import Head from 'next/head'
-import styles from '../styles/Home.module.css'
+import { useContext } from 'react'
+import Link from 'next/Link';
+import Layout from '../components/Layout'
+import { PokemonContext } from '../components/PokemonContextProvider'
 
-export default function Home() {
+
+export default function Home({pokemon}) {
+  const { currPage, setCurrPage } = useContext(PokemonContext)
+  const maxAmount = 48
+  const maxPages = Math.floor(pokemon.length / maxAmount);
+
   return (
-    <div className={styles.container}>
-      <Head>
-        <title>Create Next App</title>
-        <link rel="icon" href="/favicon.ico" />
-      </Head>
-
-      <main className={styles.main}>
-        <h1 className={styles.title}>
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
-        </h1>
-
-        <p className={styles.description}>
-          Get started by editing{' '}
-          <code className={styles.code}>pages/index.js</code>
-        </p>
-
-        <div className={styles.grid}>
-          <a href="https://nextjs.org/docs" className={styles.card}>
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className={styles.card}>
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className={styles.card}
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className={styles.card}
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
-      </main>
-
-      <footer className={styles.footer}>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel Logo" className={styles.logo} />
-        </a>
-      </footer>
-    </div>
+    <Layout title="NextJS Pokedex">
+      <h1 className="text-4xl text-center font-semibold mb-10">The Nextjs Pokedex</h1>
+      {/* <h2 className="text-2xl my-8 text-center">First Generation</h2> */}
+      <ul className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {
+          pokemon.slice(currPage * maxAmount, currPage * maxAmount + maxAmount).map((pokeman, index) => (
+            <li id="pokeman" key={index} className="w-full mx-auto">
+              <Link href={`/pokemon?id=${(currPage * maxAmount) + (index + 1)}`}>
+                <a className="grid grid-cols-2 bg-gray-100 items-center p-2 rounded gap-x-4">
+                  <img
+                    className="w-32 h-32 object-cover"
+                    alt={pokeman.name}
+                    src={pokeman.image}
+                  />
+                  <div className="flex gap-2  md:text-2xl items-end">
+                    <span className="font-bold text-lg md:text-xl">{(currPage * maxAmount) + (index + 1)}.</span>
+                    <span className="capitalize font-medium text-xl md:text-2xl">{pokeman.name}</span>
+                  </div>
+                </a>
+              </Link>
+            </li>
+          ))
+        }
+      </ul>
+      <div className="grid grid-rows-3 md:grid-rows-2 lg:grid-rows-1 grid-cols-6 md:grid-cols-12 lg:grid-flow-col lg:auto-cols-fr gap-2 mt-4">
+        {
+          Array(maxPages).fill('').map((_, index) => (
+            <button onClick={() => setCurrPage(index)} className={`${index === currPage ? 'bg-black text-white' : 'bg-gray-100'} rounded w-full h-10 font-semibold`} key={index + 1}>{index + 1}</button>
+          ))
+        }
+      </div>
+      <style jsx>{`
+        #pokeman a {
+          grid-template-columns: 115px 1fr;
+        }
+      `}</style>
+    </Layout>
   )
+}
+
+export async function getStaticProps() {
+  try {
+    const res = await fetch('https://pokeapi.co/api/v2/pokemon?limit=897')
+    const { results } = await res.json()
+    const pokemon = results.map((pokeman, index) => {
+      const paddedId = ('00' + (index + 1)).slice(-3);
+      const image = `https://assets.pokemon.com/assets/cms2/img/pokedex/detail/${paddedId}.png`;
+
+      return { ...pokeman, image };
+    })
+
+    return {
+      props: { pokemon }
+    }
+  } catch(err) {
+    console.log(err);
+  }
 }
