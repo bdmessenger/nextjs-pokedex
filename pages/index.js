@@ -1,5 +1,5 @@
 import { useContext } from 'react'
-import Link from 'next/Link';
+import Link from 'next/link';
 import Layout from '../components/Layout'
 import { PokemonContext } from '../components/PokemonContextProvider'
 
